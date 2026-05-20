@@ -31,6 +31,8 @@ docker compose ps
 # 4. Abrir la interfaz web
 #    → http://localhost:3500
 
+![Fronted](images/WebUi.png)
+
 
 El login está **desactivado** (uso personal local). Al abrir Open WebUI por primera vez no necesitás crear cuenta.
 
