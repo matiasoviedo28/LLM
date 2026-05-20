@@ -1,4 +1,4 @@
-# Ramon IA — Stack de LLM Local
+# Stack de LLM Local
 
 Stack Docker con **Ollama** + **Open WebUI** para correr modelos LLM localmente.
 
