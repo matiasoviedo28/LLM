@@ -1,0 +1,93 @@
+services:
+
+  # ─── Ollama: servidor de inferencia LLM ───────────────────────────────────
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ramon-ollama
+    restart: unless-stopped
+    ports:
+      # BIND_ADDRESS:Host:Contenedor — 127.0.0.1 por default (solo localhost)
+      - "${BIND_ADDRESS:-127.0.0.1}:${OLLAMA_PORT:-11500}:11434"
+    volumes:
+      # Modelos y datos persisten entre reinicios
+      - ollama_data:/root/.ollama
+    networks:
+      - ramon-net
+    environment:
+      # Escuchar en todas las interfaces dentro del contenedor
+      - OLLAMA_HOST=0.0.0.0
+      # Descargar modelo de RAM tras 5 min de inactividad (crítico para CPU-only)
+      - OLLAMA_KEEP_ALIVE=5m
+      # Una sola request en paralelo (optimización para CPU sin GPU)
+      - OLLAMA_NUM_PARALLEL=1
+      # Solo un modelo cargado a la vez
+      - OLLAMA_MAX_LOADED_MODELS=1
+    healthcheck:
+      # ollama list llama al servidor local — no necesita curl ni wget
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  # ─── Init: descarga automática del modelo al levantar el stack ───────────
+  model-init:
+    image: ollama/ollama:latest
+    container_name: ramon-model-init
+    restart: "no"
+    networks:
+      - ramon-net
+    environment:
+      # Apunta al servidor Ollama dentro de la red Docker (no al host)
+      - OLLAMA_HOST=http://ramon-ollama:11434
+    # MODEL viene del .env — cambiá ese valor para elegir el modelo
+    command: ["ollama", "pull", "${MODEL:-gemma3:4b}"]
+    depends_on:
+      ollama:
+        condition: service_healthy
+
+  # ─── Open WebUI: interfaz web para chatear con el modelo ──────────────────
+  webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: ramon-webui
+    restart: unless-stopped
+    ports:
+      # BIND_ADDRESS:Host:Contenedor — 127.0.0.1 por default (solo localhost)
+      - "${BIND_ADDRESS:-127.0.0.1}:${WEBUI_PORT:-3500}:8080"
+    volumes:
+      # Chats e historial persisten entre reinicios
+      - webui_data:/app/backend/data
+    networks:
+      - ramon-net
+    environment:
+      # URL interna de Ollama (comunicación dentro de la red Docker)
+      - OLLAMA_BASE_URL=http://ramon-ollama:11434
+      # Desactivar login — uso personal local
+      - WEBUI_AUTH=False
+      # Desactivar telemetría
+      - SCARF_NO_ANALYTICS=true
+      - DO_NOT_TRACK=1
+      - ANONYMIZED_TELEMETRY=False
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      # Open WebUI es Python/FastAPI — usa python3 que siempre está disponible
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://localhost:8080')\" 2>/dev/null || exit 1"]
+      interval: 20s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+# ─── Volúmenes persistentes ────────────────────────────────────────────────
+volumes:
+  ollama_data:
+    name: ramon_ollama_data
+  webui_data:
+    name: ramon_webui_data
+
+# ─── Red aislada del stack ─────────────────────────────────────────────────
+networks:
+  ramon-net:
+    name: ramon-net
+    driver: bridge

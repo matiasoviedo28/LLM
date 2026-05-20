@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker --version)",
+      "Bash(docker compose *)",
+      "Bash(chmod +x /home/matidev/Escritorio/Ramon/scripts/healthcheck.sh)",
+      "Bash(docker events *)",
+      "Bash(docker image *)",
+      "Bash(docker system *)",
+      "Bash(docker exec *)",
+      "Bash(curl -s http://localhost:11500/api/tags)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:3500)",
+      "Bash(docker network *)",
+      "Bash(time curl -s http://localhost:11500/api/generate -d '{ *)",
+      "Bash(docker stats *)",
+      "Bash(wait)",
+      "Bash(grep -v '^$')",
+      "Bash(pkill -f 'ollama pull gemma3')",
+      "Bash(bash /home/matidev/Escritorio/Ramon/scripts/healthcheck.sh)",
+      "Bash(echo \"EXIT_CODE: $?\")"
+    ]
+  }
+}

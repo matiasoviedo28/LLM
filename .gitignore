@@ -1,0 +1,15 @@
+# Variables de entorno reales — no versionar
+.env
+
+# Datos de Docker volumes si alguien los monta localmente
+ollama_data/
+webui_data/
+
+# Logs
+*.log
+
+# Editor cruft
+.DS_Store
+.vscode/
+*.swp
+*~
