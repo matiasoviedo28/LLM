@@ -40,8 +40,9 @@ services:
     environment:
       # Apunta al servidor Ollama dentro de la red Docker (no al host)
       - OLLAMA_HOST=http://ramon-ollama:11434
-    # MODEL viene del .env — cambiá ese valor para elegir el modelo
-    command: ["ollama", "pull", "${MODEL:-gemma3:4b}"]
+    # MODEL viene del .env — cambiá ese valor para elegir el modelo.
+    # La imagen ya tiene "ollama" como ENTRYPOINT, así que el command son solo los args.
+    command: ["pull", "${MODEL:-gemma3n:e4b}"]
     depends_on:
       ollama:
         condition: service_healthy
